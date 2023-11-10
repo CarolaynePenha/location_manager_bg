@@ -35,7 +35,7 @@ export async function gameSchema(req, res, next) {
 
 export async function customerSchema(req, res, next) {
   const date = dayjs().subtract(18, "year").format("YYYY/MM/DD");
-  console.log("date: ", date);
+
   const gameSchema = joi.object({
     cpf: joi
       .string()

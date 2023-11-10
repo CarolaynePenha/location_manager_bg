@@ -3,7 +3,7 @@ import connection from "../db.js";
 
 export async function postRentals(req, res) {
   const rental = req.body;
-  const rentDate = dayjs().format("DD/MM/YYYY");
+  const rentDate = dayjs().format("YYYY/MM/DD");
 
   try {
     if (rental.daysRented < 1) {
@@ -122,6 +122,54 @@ export async function getRentals(req, res) {
         `
     );
     res.status(200).send(rentals.rows);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({
+      message: "Algo deu errado, tente novamente",
+      err: err.response,
+    });
+  }
+}
+
+export async function postReturn(req, res) {
+  const { id } = req.params;
+  const returnDate = dayjs().format("YYYY/MM/DD");
+  console.log("returnDate: ", Date.parse(returnDate));
+
+  try {
+    const queryDelay = await connection.query(
+      `
+        SELECT rentals."rentDate",rentals."daysRented",games."pricePerDay" FROM rentals
+        JOIN games ON games.id=rentals."gameId"
+        WHERE rentals.id =$1 AND rentals."returnDate" IS NULL
+            `,
+      [id]
+    );
+
+    if (queryDelay.rowCount === 1) {
+      const rentDate = Date.parse(queryDelay.rows[0].rentDate);
+      const theoreticReturnDay =
+        rentDate + queryDelay.rows[0].daysRented * (1000 * 60 * 60 * 24);
+      const delayMilisegundos = Date.parse(returnDate) - theoreticReturnDay;
+      const delayDays = delayMilisegundos / (1000 * 60 * 60 * 24) + 1;
+      const delayFee = delayDays * queryDelay.rows[0].pricePerDay;
+
+      const queryCloseLocation = await connection.query(
+        `
+        UPDATE rentals 
+        SET
+        "returnDate"=$1,
+        "delayFee"=$2
+        WHERE id = $3
+          `,
+        [returnDate, delayFee, id]
+      );
+      res.sendStatus(200);
+      return;
+    }
+
+    res.sendStatus(404);
+    return;
   } catch (err) {
     console.log(err);
     res.status(500).send({
