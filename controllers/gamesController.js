@@ -2,7 +2,7 @@ import connection from "../db.js";
 
 export async function postGame(req, res) {
   const game = req.body;
-  console.log("category: ", game);
+
   try {
     const checkId = await connection.query(
       `
@@ -59,7 +59,7 @@ export async function getGames(req, res) {
           `,
         [gameName + "%"]
       );
-      res.send(games.rows).status(200);
+      res.status(200).send(games.rows);
       return;
     }
     const games = await connection.query(
@@ -68,7 +68,7 @@ export async function getGames(req, res) {
           JOIN categories ON games."categoryId"=categories.id
         `
     );
-    res.send(games.rows).status(200);
+    res.status(200).send(games.rows);
   } catch (err) {
     console.log(err);
     res.status(500).send({

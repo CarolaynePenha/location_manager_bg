@@ -44,7 +44,7 @@ export async function getCustomers(req, res) {
             `,
         [cpf + "%"]
       );
-      res.send(customers.rows).status(200);
+      res.status(200).send(customers.rows);
       return;
     }
     const customers = await connection.query(
@@ -52,7 +52,7 @@ export async function getCustomers(req, res) {
       SELECT * FROM customers
           `
     );
-    res.send(customers.rows).status(200);
+    res.status(200).send(customers.rows);
   } catch (err) {
     console.log(err);
     res.status(500).send({
@@ -73,9 +73,9 @@ export async function getCustomerById(req, res) {
       [id]
     );
     if (customer.rowCount === 1) {
-      res.send(customer.rows).status(200);
+      res.status(200).send(customer.rows);
     } else {
-      res.send("Esse id de cliente não existe").status(404);
+      res.status(404).send("Esse id de cliente não existe");
     }
   } catch (err) {
     console.log(err);

@@ -63,3 +63,70 @@ export async function postRentals(req, res) {
     });
   }
 }
+
+export async function getRentals(req, res) {
+  const { gameId } = req.query;
+  const { customerId } = req.query;
+
+  try {
+    if (gameId) {
+      const rentals = await connection.query(
+        `
+          SELECT rentals.*,
+          jsonb_build_object('id', customers.id, 'name', customers.name) AS customer,
+          jsonb_build_object('id',games.id,'name',games.name,'categoryId',games."categoryId",'categoryName', categories.name) AS game
+          FROM rentals
+          JOIN games ON games.id=rentals."gameId"
+          JOIN categories ON games."categoryId"=categories.id
+          JOIN customers ON customers.id=rentals."customerId"
+            WHERE rentals."gameId"=$1
+          `,
+        [gameId]
+      );
+      if (rentals?.rowCount && rentals.rowCount >= 1) {
+        res.status(200).send(rentals.rows);
+        return;
+      }
+      res.status(400).send("gameId inválido");
+      return;
+    } else if (customerId) {
+      const rentals = await connection.query(
+        `
+          SELECT rentals.*,
+          jsonb_build_object('id', customers.id, 'name', customers.name) AS customer,
+          jsonb_build_object('id',games.id,'name',games.name,'categoryId',games."categoryId",'categoryName', categories.name) AS game
+          FROM rentals
+          JOIN games ON games.id=rentals."gameId"
+          JOIN categories ON games."categoryId"=categories.id
+          JOIN customers ON customers.id=rentals."customerId"
+            WHERE rentals."customerId"=$1
+          `,
+        [customerId]
+      );
+      if (rentals?.rowCount && rentals.rowCount >= 1) {
+        res.status(200).send(rentals.rows);
+        return;
+      }
+      res.status(400).send("customer inválido");
+      return;
+    }
+    const rentals = await connection.query(
+      `
+      SELECT rentals.*,
+      jsonb_build_object('id', customers.id, 'name', customers.name) AS customer,
+      jsonb_build_object('id',games.id,'name',games.name,'categoryId',games."categoryId",'categoryName', categories.name) AS game
+      FROM rentals
+      JOIN games ON games.id=rentals."gameId"
+      JOIN categories ON games."categoryId"=categories.id
+      JOIN customers ON customers.id=rentals."customerId"
+        `
+    );
+    res.status(200).send(rentals.rows);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({
+      message: "Algo deu errado, tente novamente",
+      err: err.response,
+    });
+  }
+}
