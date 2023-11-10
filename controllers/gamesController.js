@@ -46,3 +46,34 @@ export async function postGame(req, res) {
     });
   }
 }
+
+export async function getGames(req, res) {
+  const gameName = req.query.name;
+  try {
+    if (gameName) {
+      const games = await connection.query(
+        `
+            SELECT games.*,categories.name as "categoryName" FROM games
+            JOIN categories ON games."categoryId"=categories.id
+            WHERE games.name ILIKE $1
+          `,
+        [gameName + "%"]
+      );
+      res.send(games.rows).status(200);
+      return;
+    }
+    const games = await connection.query(
+      `
+          SELECT games.*,categories.name as "categoryName" FROM games
+          JOIN categories ON games."categoryId"=categories.id
+        `
+    );
+    res.send(games.rows).status(200);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({
+      message: "Algo deu errado, tente novamente",
+      err: err.response,
+    });
+  }
+}

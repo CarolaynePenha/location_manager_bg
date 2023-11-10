@@ -4,6 +4,8 @@ import cors from "cors";
 
 import categoryRouter from "./routers/categoryRouter.js";
 import gamesRouter from "./routers/gamesRouter.js";
+import customersRouter from "./routers/customersRouter.js";
+import rentalsRouter from "./routers/rentalsRouter.js";
 
 dotenv.config();
 
@@ -14,5 +16,7 @@ app.use(cors());
 
 app.use(categoryRouter);
 app.use(gamesRouter);
+app.use(customersRouter);
+app.use(rentalsRouter);
 
 app.listen(process.env.ACESS_PORT);
