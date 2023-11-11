@@ -49,6 +49,8 @@ export async function postGame(req, res) {
 
 export async function getGames(req, res) {
   const gameName = req.query.name;
+  const { offset } = req.query;
+  const { limit } = req.query;
   try {
     if (gameName) {
       const games = await connection.query(
@@ -66,7 +68,9 @@ export async function getGames(req, res) {
       `
           SELECT games.*,categories.name as "categoryName" FROM games
           JOIN categories ON games."categoryId"=categories.id
-        `
+          LIMIT $1 OFFSET $2
+        `,
+      [limit, offset]
     );
     res.status(200).send(games.rows);
   } catch (err) {

@@ -67,6 +67,8 @@ export async function postRentals(req, res) {
 export async function getRentals(req, res) {
   const { gameId } = req.query;
   const { customerId } = req.query;
+  const { offset } = req.query;
+  const { limit } = req.query;
 
   try {
     if (gameId) {
@@ -79,9 +81,10 @@ export async function getRentals(req, res) {
           JOIN games ON games.id=rentals."gameId"
           JOIN categories ON games."categoryId"=categories.id
           JOIN customers ON customers.id=rentals."customerId"
-            WHERE rentals."gameId"=$1
+          WHERE rentals."gameId"=$1
+          LIMIT $2 OFFSET $3 
           `,
-        [gameId]
+        [gameId, limit, offset]
       );
       if (rentals?.rowCount && rentals.rowCount >= 1) {
         res.status(200).send(rentals.rows);
@@ -99,9 +102,10 @@ export async function getRentals(req, res) {
           JOIN games ON games.id=rentals."gameId"
           JOIN categories ON games."categoryId"=categories.id
           JOIN customers ON customers.id=rentals."customerId"
-            WHERE rentals."customerId"=$1
+          WHERE rentals."customerId"=$1
+          LIMIT $2 OFFSET $3 
           `,
-        [customerId]
+        [customerId, limit, offset]
       );
       if (rentals?.rowCount && rentals.rowCount >= 1) {
         res.status(200).send(rentals.rows);
@@ -119,7 +123,9 @@ export async function getRentals(req, res) {
       JOIN games ON games.id=rentals."gameId"
       JOIN categories ON games."categoryId"=categories.id
       JOIN customers ON customers.id=rentals."customerId"
-        `
+      LIMIT $1 OFFSET $2
+        `,
+      [limit, offset]
     );
     res.status(200).send(rentals.rows);
   } catch (err) {
@@ -169,6 +175,34 @@ export async function postReturn(req, res) {
     }
 
     res.sendStatus(404);
+    return;
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({
+      message: "Algo deu errado, tente novamente",
+      err: err.response,
+    });
+  }
+}
+
+export async function deleteRental(req, res) {
+  const { id } = req.params;
+
+  try {
+    const queryDelete = await connection.query(
+      `
+        DELETE FROM rentals 
+        WHERE id =$1 AND "returnDate" IS NOT NULL
+            `,
+      [id]
+    );
+
+    if (queryDelete.rowCount === 1) {
+      res.sendStatus(200);
+      return;
+    }
+
+    res.sendStatus(400);
     return;
   } catch (err) {
     console.log(err);

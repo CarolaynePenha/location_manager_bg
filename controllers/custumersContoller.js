@@ -35,14 +35,17 @@ export async function postCustomer(req, res) {
 
 export async function getCustomers(req, res) {
   const { cpf } = req.query;
+  const { offset } = req.query;
+  const { limit } = req.query;
   try {
     if (cpf) {
       const customers = await connection.query(
         `
               SELECT * FROM customers
               WHERE customers.cpf LIKE $1
+              LIMIT $2 OFFSET $3
             `,
-        [cpf + "%"]
+        [cpf + "%", limit, offset]
       );
       res.status(200).send(customers.rows);
       return;
@@ -50,7 +53,9 @@ export async function getCustomers(req, res) {
     const customers = await connection.query(
       `
       SELECT * FROM customers
-          `
+      LIMIT $1 OFFSET $2
+          `,
+      [limit, offset]
     );
     res.status(200).send(customers.rows);
   } catch (err) {

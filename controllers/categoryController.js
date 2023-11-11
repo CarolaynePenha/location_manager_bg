@@ -2,7 +2,7 @@ import connection from "../db.js";
 
 export async function postCategory(req, res) {
   const { categoryName } = req.body;
-  console.log("category: ", categoryName);
+
   try {
     const queryCategory = await connection.query(
       `
@@ -29,13 +29,17 @@ export async function postCategory(req, res) {
 }
 
 export async function getCategory(req, res) {
+  const { offset } = req.query;
+  const { limit } = req.query;
   try {
     const queryCategory = await connection.query(
       `
-      SELECT * FROM categories 
-    `
+        SELECT * FROM categories LIMIT $1  OFFSET $2 
+      `,
+      [limit, offset]
     );
     res.send(queryCategory.rows).status(200);
+    return;
   } catch (err) {
     console.log(err);
     res.status(500).send({
